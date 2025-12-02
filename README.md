@@ -1,37 +1,36 @@
-📱 Google Play Store Review Analytics
+# 📱 Google Play Store Review Analytics
+
 <p align="center">
-<img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
-<img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
-<img src="https://img.shields.io/badge/Status-Active%20Development-green" alt="Status: Active">
-<img src="https://img.shields.io/badge/NLP-VADER%20%2F%20TF--IDF-orange" alt="NLP">
+  <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
+  <img src="https://img.shields.io/badge/PostgreSQL-13+-336791.svg" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/NLP-DistilBERT%20%2F%20SpaCy-orange" alt="NLP">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  <img src="https://img.shields.io/badge/Status-Completed-green" alt="Status: Completed">
 </p>
 
+## 10 Academy: Artificial Intelligence Mastery - Week 2 Challenge
+**Uncovering actionable insights from Ethiopian banking app reviews through Data Engineering and NLP.**
 
-10 Academy: Artificial Intelligence Mastery - Week 2 Challenge
-Uncovering actionable insights from Ethiopian banking app reviews through Data Engineering and NLP.
+---
 
-📖 Project Overview
+## 📖 Project Overview
 
-This project is a modular data pipeline designed to scrape, clean, and analyze user reviews from the Google Play Store for major Ethiopian banking applications (CBE, Bank of Abyssinia, Dashen Bank). It quantifies user sentiment and identifies recurring themes to uncover satisfaction drivers and pain points.
+This project is a full-stack data engineering and NLP pipeline designed to scrape, analyze, and store user feedback for major Ethiopian banking applications (**CBE, Bank of Abyssinia, Dashen Bank**). 
 
-The Core Goal:
-To transform raw, unstructured user feedback into structured actionable data (Sentiment Scores & Thematic Categories) for product improvement.
+The system moves beyond simple star ratings by utilizing **Transformer models (BERT)** to quantify sentiment and **Thematic Analysis** to pinpoint specific satisfaction drivers (e.g., "Good UI") and pain points (e.g., "Login Loops"). The final data is persisted in a **PostgreSQL** database for scalability.
 
-🚀 Key Features
+### 🚀 Key Features
+*   **Data Collection:** Automated scraping of 1,300+ reviews using `google-play-scraper`.
+*   **Advanced NLP Engine:**
+    *   **Translation:** Amharic → English via `deep-translator`.
+    *   **Cleaning:** Lemmatization and stop-word removal using `SpaCy`.
+    *   **Sentiment:** High-accuracy scoring using Hugging Face's `distilbert-base-uncased`.
+*   **Data Engineering:** Relational database storage (ETL) using **PostgreSQL** and SQLAlchemy.
+*   **Actionable Insights:** Automated generation of "Pain Points" vs. "Drivers" and visualization of sentiment trends.
 
-Data Collection: Automated scraping using google-play-scraper.
+---
 
-Preprocessing Engine: Deduplication, date normalization, and handling of missing values.
-
-Multilingual Support: Automatic language detection and translation (Amharic → English) using deep-translator.
-
-Sentiment Analysis: Polarity scoring using VADER (Valence Aware Dictionary and sEntiment Reasoner).
-
-Thematic Analysis: Hybrid approach using TF-IDF for keyword discovery and Regex-based pattern matching for theme assignment.
-
-Modular Architecture: Clean, reusable Python scripts located in scripts/.
-
-📂 Repository Structure
+## 📂 Repository Structure
 <p align="center">
 <img src="Images/filestructure.png" alt="File Structure" width="80%">
 <br>
@@ -39,9 +38,6 @@ Modular Architecture: Clean, reusable Python scripts located in scripts/.
 </p>
 
 🛠 Installation & Setup
-
-Follow these steps to set up a reproducible environment.
-
 1. Clone the Repository
 code
 Bash
@@ -51,9 +47,6 @@ expand_less
 git clone https://github.com/zemicahel/kaim-week2.git
 cd kaim-week2
 2. Virtual Environment
-
-It is best practice to run this project in a virtual environment.
-
 code
 Bash
 download
@@ -65,101 +58,86 @@ venv\Scripts\activate
 # Linux/macOS
 source venv/bin/activate
 3. Install Dependencies
+
+This project requires NLP libraries and Database drivers.
+
 code
 Bash
 download
 content_copy
 expand_less
-pip install pandas numpy google-play-scraper vaderSentiment langdetect deep-translator scikit-learn
+pip install pandas numpy google-play-scraper transformers torch spacy psycopg2-binary sqlalchemy deep-translator seaborn wordcloud
+
+Important: Download the SpaCy English model:
+
+code
+Bash
+download
+content_copy
+expand_less
+python -m spacy download en_core_web_sm
+4. Database Setup (PostgreSQL)
+
+Ensure PostgreSQL is running locally. Create a database named newami (or update load_db.py with your credentials).
+
 📊 Workflow & Methodology
 
-The project is executed in two distinct phases, mirroring the modular scripts in the scripts/ directory.
+The pipeline is executed in four phases corresponding to the project tasks.
 
-Phase 1: Data Collection & Preprocessing
+Phase 1: Data Collection (ETL - Extract)
 
-Objective: Ingest raw reviews and prepare a clean dataset.
-Tools: google-play-scraper, pandas.
+Script: scripts/scraper.py & scripts/processor.py
 
-Scraping (scraper.py): Fetches 450+ reviews per bank (CBE, BoA, Dashen).
+Fetches the latest ~450 reviews per bank.
 
-Processing (processor.py):
+Cleans data, removes duplicates, and standardizes date formats.
 
-Renames columns for consistency.
+Phase 2: NLP Analysis (ETL - Transform)
 
-Removes duplicates based on review_text and bank.
+Script: scripts/sentiment_analysis.py
 
-Standardizes dates to YYYY-MM-DD.
+Step 1: Translates non-English reviews.
 
-Usage:
+Step 2: Sentiment Analysis: Uses DistilBERT (Transformer) to assign labels (POSITIVE/NEGATIVE) and confidence scores. Fallback to VADER included for legacy support.
 
-code
-Python
-download
-content_copy
-expand_less
-from scripts.scraper import fetch_reviews
-from scripts.processor import process_and_save
+Step 3: Thematic Tagging: Uses Regex and SpaCy lemmas to categorize reviews into: Access Issues, Transaction Performance, UI/UX, Customer Support.
 
-# Fetch and Clean
-df = fetch_reviews(['com.combanketh.mobilebanking'], count_per_app=450)
-process_and_save(df, output_file='../data/cleaned/bank_reviews_cleaned.csv')
-Phase 2: Sentiment & Thematic Analysis
+Phase 3: Data Warehousing (ETL - Load)
 
-Objective: Convert text into numerical sentiment data and categorical themes.
-Tools: VADER, TF-IDF, Regex.
+Script: scripts/load_db.py
 
-Translation: Detects language; translates Amharic/Unknown to English.
+Defines a relational schema (banks and reviews tables).
 
-Sentiment Scoring:
+Loads the processed/analyzed CSV data into PostgreSQL.
 
-Positive: Compound score 
-≥
-≥
- 0.05
+Ensures referential integrity between Bank IDs and Reviews.
 
-Negative: Compound score 
-≤
-≤
- -0.05
+Database Schema:
 
-Neutral: Score between -0.05 and 0.05
+Banks: bank_id (PK), bank_name
+Reviews: review_id (PK), bank_id (FK), text, sentiment_score, themes
 
-Thematic Categorization:
+Phase 4: Insights & Reporting
 
-Discovery: Uses TF-IDF to find top keywords per bank.
+Notebook: notebooks/analysis.ipynb
 
-Tagging: Maps reviews to themes: Access Issues, Transaction Performance, UI/UX, Customer Support, Features.
+Generates the Final Report.
 
-Usage:
+Visualizations: Sentiment Heatmaps, Trend Lines (Time-Series), and Word Clouds.
 
-code
-Python
-download
-content_copy
-expand_less
-from scripts.sentiment_analysis import run_pipeline
+Automated Insights: Programmatically identifies the lowest-scoring theme (Pain Point) and highest-scoring theme (Driver) for each bank.
 
-# Run the full NLP pipeline
-run_pipeline(
-    input_path="../data/cleaned/bank_reviews_cleaned.csv",
-    output_path="../data/cleaned/task2_reviews_analyzed.csv",
-    summary_path="../data/cleaned/task2_sentiment_summary.csv"
-)
 📉 Outputs & Results
 
-The pipeline generates the following data assets in the data/cleaned/ folder:
+The following assets are generated:
 
-File Name	Description
-bank_reviews_cleaned.csv	Raw cleaned data from Task 1 (Scraping).
-task2_reviews_analyzed.csv	Final dataset including sentiment_score, sentiment_label, and identified_themes.
-task2_sentiment_summary.csv	Aggregated view showing average sentiment per Bank and Star Rating.
-🔮 Future Work
+File / Asset	Description
+data/cleaned/task2_reviews_analyzed_bert.csv	Final dataset with BERT scores and Themes.
+PostgreSQL Database	Persistent storage of all structured data.
+Final_Report.pdf	Executive summary with strategic recommendations.
+Sample Insight
 
-Transformer Models: Upgrade from VADER to distilbert-base-uncased-finetuned-sst-2-english for higher accuracy.
-
-Topic Modeling: Implement LDA (Latent Dirichlet Allocation) for unsupervised topic discovery.
-
-Dashboarding: Build a Streamlit app to visualize the sentiment trends over time.
+"While UI/UX is a strong satisfaction driver across all apps, Access Issues (Login loops, OTP failures) remains the primary cause of churn, correlating with a 40% drop in sentiment scores."
 
 🤝 Contributing
 
@@ -169,9 +147,9 @@ Fork the Project
 
 Create your Feature Branch (git checkout -b feature/AmazingFeature)
 
-Commit your Changes (git commit -m 'Add some AmazingFeature')
+Commit your Changes
 
-Push to the Branch (git push origin feature/AmazingFeature)
+Push to the Branch
 
 Open a Pull Request
 
@@ -187,3 +165,9 @@ Zemicahel
 
 
 ![alt text](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)
+
+code
+Code
+download
+content_copy
+expand_less
